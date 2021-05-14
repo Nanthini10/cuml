@@ -19,7 +19,7 @@ import dask
 import numpy as np
 from toolz import first
 from collections.abc import Iterable
-
+import logging
 from cuml.dask.common.utils import get_client
 
 from cuml import Base
@@ -271,7 +271,9 @@ class DelayedParallelFunc(object):
 
         func = dask.delayed(func, pure=False, nout=1)
         if isinstance(X, dcDataFrame):
+            logging.warn("dask base  run parallel func")
             preds = [func(model_delayed, part, **kwargs) for part in X_d]
+            logging.warn("dask base COLLECTED PREDS")
             dtype = first(X.dtypes) if output_dtype is None else output_dtype
         elif isinstance(X, dcSeries):
             preds = [func(model_delayed, part, **kwargs) for part in X_d]
@@ -286,7 +288,7 @@ class DelayedParallelFunc(object):
         # TODO: Add eager path back in
 
         if output_collection_type == 'cupy':
-
+            logging.warn("dask base CUPY")
             # todo: add parameter for option of not checking directly
             shape = (np.nan,) * n_dims
             preds_arr = [
@@ -297,17 +299,22 @@ class DelayedParallelFunc(object):
                 for pred in preds]
 
             if output_futures:
+                logging.warn("client compute-output_futures")
                 return self.client.compute(preds)
             else:
+                logging.warn("not output_futures")
                 output = dask.array.concatenate(preds_arr, axis=0,
                                                 allow_unknown_chunksizes=True
                                                 )
                 return output if delayed else output.persist()
 
         elif output_collection_type == 'cudf':
+            logging.warn("dask base  CUDF")
             if output_futures:
+                logging.warn("dask base  output_futures")
                 return self.client.compute(preds)
             else:
+                logging.warn("dask base  not output_futures")
                 output = dask.dataframe.from_delayed(preds)
                 return output if delayed else output.persist()
         else:

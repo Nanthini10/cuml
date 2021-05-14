@@ -96,15 +96,22 @@ class DistributedDataHandler:
 
         client : dask.distributedClient
         """
+        import logging
+        logging.warn("DDH Create")
+#         loggin.warn(client)
+        
 
         client = cls.get_client(client)
 
         datatype, multiple = _get_datatype_from_inputs(data)
 
+        logging.warn("DDH after get dtype")
         gpu_futures = client.sync(_extract_partitions, data, client)
 
+        logging.warn("DDH after sync")
         workers = tuple(set(map(lambda x: x[0], gpu_futures)))
 
+        logging.warn(workers)
         return DistributedDataHandler(gpu_futures=gpu_futures, workers=workers,
                                       datatype=datatype, multiple=multiple,
                                       client=client)

@@ -19,6 +19,7 @@ import math
 import numpy as np
 import cupy as cp
 import warnings
+import logging
 
 from cuml import using_output_type
 from collections.abc import Iterable
@@ -98,8 +99,11 @@ class BaseRandomForestModel(object):
         return n_estimators_per_worker
 
     def _fit(self, model, dataset, convert_dtype, broadcast_data):
+        logging.warn("BaseRF before distributed data handler")
         data = DistributedDataHandler.create(dataset, client=self.client)
         self.active_workers = data.workers
+        logging.warn("BaseRF after distributed data handler")
+        logging.warn(self.active_workers)
         self.datatype = data.datatype
         if self.datatype == 'cudf':
             has_float64 = (dataset[0].dtypes.any() == np.float64)
@@ -109,6 +113,8 @@ class BaseRandomForestModel(object):
             raise TypeError("To use Dask RF data should have dtype float32.")
 
         labels = self.client.persist(dataset[1])
+        logging.warn("BaseRF after labels")
+        logging.warn(labels)
         if self.datatype == 'cudf':
             self.num_classes = len(labels.unique())
         else:
@@ -118,9 +124,13 @@ class BaseRandomForestModel(object):
         combined_data = list(map(lambda x: x[1], data.gpu_futures)) \
             if broadcast_data else None
 
+        logging.warn("baseRF")
+        logging.warn(combined_data)
         futures = list()
         for idx, (worker, worker_data) in \
                 enumerate(data.worker_to_parts.items()):
+            logging.warn("BaseRF")
+            logging.warn(worker)
             futures.append(
                 self.client.submit(
                     _func_fit,
@@ -349,6 +359,7 @@ class BaseRandomForestModel(object):
 
 
 def _func_fit(model, input_data, convert_dtype):
+    dask.distributed.get_worker().log_event("in _func_fit", "E")
     X = concatenate([item[0] for item in input_data])
     y = concatenate([item[1] for item in input_data])
     return model.fit(X, y, convert_dtype)

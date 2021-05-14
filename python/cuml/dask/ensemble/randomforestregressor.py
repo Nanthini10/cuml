@@ -24,6 +24,8 @@ from cuml.dask.common.base import BaseEstimator
 
 import dask
 
+import logging
+
 
 class RandomForestRegressor(BaseRandomForestModel, DelayedPredictionMixin,
                             BaseEstimator):
@@ -205,6 +207,7 @@ class RandomForestRegressor(BaseRandomForestModel, DelayedPredictionMixin,
         random_state,
         **kwargs
     ):
+        logging.warn("RFR  in _construct_rf")
         return cuRFR(
             n_estimators=n_estimators,
             random_state=random_state,
@@ -280,6 +283,7 @@ class RandomForestRegressor(BaseRandomForestModel, DelayedPredictionMixin,
 
         """
         self.internal_model = None
+        logging.warn("RFR in fit")
         self._fit(model=self.rfs,
                   dataset=(X, y),
                   convert_dtype=convert_dtype,
@@ -381,6 +385,7 @@ class RandomForestRegressor(BaseRandomForestModel, DelayedPredictionMixin,
                         delayed=delayed
                     )
             else:
+                logging.warn("RFR  in predict (using fil)")
                 preds = \
                     self._predict_using_fil(
                         X,
@@ -411,6 +416,7 @@ class RandomForestRegressor(BaseRandomForestModel, DelayedPredictionMixin,
         return self.apply_reduction(reduce, partial_infs, datatype, delayed)
 
     def predict_using_fil(self, X, delayed, **kwargs):
+        logging.warn("RFR  in predict_using_fil")
         if self._get_internal_model() is None:
             self._set_internal_model(self._concat_treelite_models())
         return self._predict_using_fil(X=X,
