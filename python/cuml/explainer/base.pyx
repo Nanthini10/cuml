@@ -121,8 +121,9 @@ class SHAPBase():
                  is_gpu_model=None,
                  handle=None,
                  dtype=None,
-                 output_type=None):
-
+                 output_type=None,
+                 delay=0.001):
+        self.delay=delay
         if verbose is True:
             self.verbose = logger.level_debug
         elif verbose is False:
@@ -195,7 +196,7 @@ class SHAPBase():
             cp.mean(
                 model_func_call(X=self.background,
                                 model_func=self.model,
-                                gpu_model=self.is_gpu_model),
+                                gpu_model=self.is_gpu_model,delay=self.delay),
                 axis=0
             )
         )

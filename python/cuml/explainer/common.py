@@ -100,13 +100,16 @@ def get_dtype_from_model_func(func, default=None):
 
 def model_func_call(X,
                     model_func,
-                    gpu_model=False):
+                    gpu_model=False,
+                    delay=0.001):
     """
     Function to call `model_func(X)` using either `NumPy` arrays if
     gpu_model is False or X directly if model_gpu based is True.
     Returns the results as CuPy arrays.
     """
     if gpu_model:
+        import time
+        time.sleep(delay)
         y = input_to_cupy_array(X=model_func(X),
                                 order='K').array
     else:

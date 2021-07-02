@@ -200,7 +200,8 @@ class KernelExplainer(SHAPBase):
                  is_gpu_model=None,
                  handle=None,
                  dtype=None,
-                 output_type=None):
+                 output_type=None,
+                 delay=0.001):
 
         super().__init__(
             model=model,
@@ -212,9 +213,10 @@ class KernelExplainer(SHAPBase):
             is_gpu_model=is_gpu_model,
             handle=handle,
             dtype=dtype,
-            output_type=output_type
+            output_type=output_type,
+            delay=delay
         )
-
+        self.delay=delay
         # default value matching SHAP package
         if nsamples == 'auto':
             self.nsamples = 2 * self.ncols + 2**11
@@ -299,7 +301,8 @@ class KernelExplainer(SHAPBase):
         fx = cp.array(
             model_func_call(X=row,
                             model_func=self.model,
-                            gpu_model=self.is_gpu_model))
+                            gpu_model=self.is_gpu_model,
+                            delay=self.delay))
 
         self.model_call_time = \
             self.model_call_time + (time.time() - total_timer)
@@ -377,7 +380,8 @@ class KernelExplainer(SHAPBase):
         # evaluate model on combinations
         y = model_func_call(X=self._synth_data,
                             model_func=self.model,
-                            gpu_model=self.is_gpu_model)
+                            gpu_model=self.is_gpu_model,
+                            delay=self.delay)
 
         self.model_call_time = \
             self.model_call_time + (time.time() - model_timer)
